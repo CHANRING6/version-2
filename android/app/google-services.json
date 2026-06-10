@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "465689120671",
+    "project_id": "mega-mart-289da",
+    "storage_bucket": "mega-mart-289da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465689120671:android:e8599a9ec0fab9e74db7aa",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQBUjIAj0B57WgojqKgTqSMXwZvBk6fkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465689120671:android:ffa1255f34e731e34db7aa",
+        "android_client_info": {
+          "package_name": "com.example.mega"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQBUjIAj0B57WgojqKgTqSMXwZvBk6fkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
