@@ -6,39 +6,27 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Mega Mart - Online Supermarket App">
-
-  <!-- Viewport for mobile-first layout -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <!-- PWA / iOS meta tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mega Mart">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Mega Mart</title>
   <link rel="manifest" href="manifest.json">
 
   <style>
-    /* Ensure the app fills the full viewport like a mobile app */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
       height: 100%;
       width: 100%;
-      overflow: hidden;
       background-color: #F8FAFC;
     }
 
-    /* Centre the app in a phone-sized frame on desktop */
     body {
       display: flex;
       justify-content: center;
@@ -53,15 +41,11 @@
       max-height: 100vh;
       position: relative;
       overflow: hidden;
-      border-radius: 0;
       box-shadow: 0 25px 60px rgba(0,0,0,0.35);
     }
 
-    /* On small screens (actual mobile/debug), fill 100% */
     @media (max-width: 480px) {
-      body {
-        background: #F8FAFC;
-      }
+      body { background: #F8FAFC; }
       #flutter-frame {
         width: 100vw;
         height: 100vh;
@@ -69,7 +53,7 @@
       }
     }
 
-    #loading {
+    #loading-overlay {
       position: absolute;
       inset: 0;
       display: flex;
@@ -77,45 +61,57 @@
       align-items: center;
       justify-content: center;
       background: #F8FAFC;
-      z-index: 999;
+      z-index: 9999;
       gap: 16px;
-    }
-
-    #loading .logo {
-      font-size: 32px;
-      font-weight: 800;
-      color: #1A5CFF;
       font-family: sans-serif;
     }
 
-    #loading .spinner {
-      width: 32px;
-      height: 32px;
+    .logo { font-size: 28px; font-weight: 800; color: #1A5CFF; }
+
+    .spinner {
+      width: 32px; height: 32px;
       border: 3px solid #E2E8F0;
       border-top-color: #1A5CFF;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    flt-glass-pane {
+      position: absolute !important;
+      top: 0 !important; left: 0 !important;
+      width: 100% !important; height: 100% !important;
     }
   </style>
 </head>
 <body>
   <div id="flutter-frame">
-    <div id="loading">
+    <div id="loading-overlay">
       <div class="logo">🛒 Mega Mart</div>
       <div class="spinner"></div>
     </div>
+
     <script>
-      // Hide the loading overlay once Flutter is ready
-      window.addEventListener('flutter-first-frame', function() {
-        const el = document.getElementById('loading');
+      window.addEventListener('flutter-first-frame', function () {
+        var el = document.getElementById('loading-overlay');
         if (el) el.style.display = 'none';
       });
     </script>
-    <script src="flutter_bootstrap.js" async></script>
+
+    {{flutter_js}}
+    {{flutter_build_config}}
+
+    <script>
+      _flutter.loader.load({
+        onEntrypointLoaded: async function(engineInitializer) {
+          let appRunner = await engineInitializer.initializeEngine({
+            hostElement: document.getElementById("flutter-frame"),
+          });
+          await appRunner.runApp();
+        }
+      });
+    </script>
   </div>
 </body>
 </html>
