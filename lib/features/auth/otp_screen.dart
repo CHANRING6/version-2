@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +22,7 @@ class _OtpScreenState extends State<OtpScreen> {
   bool _isLoading = false;
   bool _canResend = false;
   int _secondsRemaining = 60;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (final c in _controllers) c.dispose();
     for (final f in _focusNodes) f.dispose();
     super.dispose();
@@ -37,19 +40,21 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // ── Countdown timer for resend ─────────────────────────────
   void _startResendTimer() {
+    _timer?.cancel();
     setState(() {
       _canResend = false;
       _secondsRemaining = 60;
     });
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() => _secondsRemaining--);
       if (_secondsRemaining <= 0) {
         setState(() => _canResend = true);
-        return false;
+        timer.cancel();
       }
-      return true;
     });
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
@@ -8,6 +10,7 @@ import '../../models/product_model.dart';
 import '../../routes/app_router.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_widget.dart';
+import '../main_shell.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -83,7 +86,9 @@ class HomeScreen extends ConsumerWidget {
                               color: AppTheme.textDark,
                               size: 20,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              ref.read(mainShellTabProvider.notifier).state = 2;
+                            },
                           ),
                         ),
                         if (cartCount > 0)
@@ -445,7 +450,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                           height: 150,
                           decoration: BoxDecoration(
                             color:
-                            Colors.white.withOpacity(0.06),
+                            Colors.white.withValues(alpha: 0.06),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -458,7 +463,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                           height: 90,
                           decoration: BoxDecoration(
                             color:
-                            Colors.white.withOpacity(0.06),
+                            Colors.white.withValues(alpha: 0.06),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -482,7 +487,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                         vertical: 3),
                                     decoration: BoxDecoration(
                                       color: Colors.white
-                                          .withOpacity(0.2),
+                                          .withValues(alpha: 0.2),
                                       borderRadius:
                                       BorderRadius.circular(
                                           AppTheme.radiusFull),
@@ -531,7 +536,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                               .formattedOriginalPrice,
                                           style: TextStyle(
                                             color: Colors.white
-                                                .withOpacity(0.6),
+                                                .withValues(alpha: 0.6),
                                             fontSize: 11,
                                             decoration:
                                             TextDecoration
@@ -574,16 +579,24 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                     AppTheme.radiusMD),
                                 child: product
                                     .imageUrl.isNotEmpty
-                                    ? Image.network(
-                                  product.imageUrl,
+                                    ? CachedNetworkImage(
+                                  imageUrl: product.imageUrl,
                                   fit: BoxFit.cover,
                                   height: 130,
-                                  errorBuilder:
+                                  placeholder: (context, url) => Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(
+                                      height: 130,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  errorWidget:
                                       (_, __, ___) =>
                                       Container(
                                         height: 130,
                                         color: Colors.white
-                                            .withOpacity(0.15),
+                                            .withValues(alpha: 0.15),
                                         child: const Icon(
                                           Icons
                                               .shopping_bag_rounded,
@@ -595,7 +608,7 @@ class _FeaturedBannerState extends State<_FeaturedBanner> {
                                     : Container(
                                   height: 130,
                                   color: Colors.white
-                                      .withOpacity(0.15),
+                                      .withValues(alpha: 0.15),
                                   child: const Icon(
                                     Icons
                                         .shopping_bag_rounded,
@@ -694,7 +707,6 @@ class _CategoryChip extends StatelessWidget {
 // ── Empty State ──────────────────────────────────────────────
 class _EmptyProducts extends StatelessWidget {
   const _EmptyProducts();
-
   @override
   Widget build(BuildContext context) {
     return const Padding(

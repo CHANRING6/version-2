@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_router.dart';
+import '../main_shell.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -58,7 +59,7 @@ class ProfileScreen extends ConsumerWidget {
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      AppTheme.primary.withOpacity(0.3),
+                                      AppTheme.primary.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -157,6 +158,18 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 16),
 
+                // ── Admin Section (visible to admins only) ─────
+                if (user?.isAdmin == true) ...[
+                  _SectionHeader(title: 'Administration'),
+                  _MenuTile(
+                    icon: Icons.admin_panel_settings_rounded,
+                    label: 'Admin Panel',
+                    subtitle: 'Manage products, orders & users',
+                    onTap: () => context.push(AppRoutes.adminDashboard),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // ── Account Section ────────────────────────────
                 _SectionHeader(title: 'Account'),
 
@@ -178,7 +191,9 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuTile(
                   icon: Icons.receipt_long_outlined,
                   label: 'Order History',
-                  onTap: () {},
+                  onTap: () {
+                    ref.read(mainShellTabProvider.notifier).state = 3;
+                  },
                 ),
 
                 const SizedBox(height: 16),

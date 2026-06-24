@@ -6,7 +6,10 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/cart_item_model.dart';
+import '../../models/order_model.dart';
 import '../../routes/app_router.dart';
+import '../../repositories/order_repository.dart';
+import '../main_shell.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -39,7 +42,7 @@ class CartScreen extends ConsumerWidget {
         ],
       ),
       body: cartItems.isEmpty
-          ? _buildEmptyCart(context)
+          ? _buildEmptyCart(context, ref)
           : Column(
               children: [
 
@@ -120,7 +123,7 @@ class CartScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppTheme.success.withOpacity(0.1),
+                            color: AppTheme.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(
                                 AppTheme.radiusMD),
                           ),
@@ -215,24 +218,84 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
-  void _proceedToCheckout(BuildContext context, WidgetRef ref) {
+  Future<void> _proceedToCheckout(BuildContext context, WidgetRef ref) async {
     final isLoggedIn = ref.read(isLoggedInProvider);
     if (!isLoggedIn) {
       context.push(AppRoutes.login);
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Checkout coming soon!'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-        ),
-      ),
+    
+    final user = await ref.read(currentUserProvider.future);
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to get user profile. Please login again.')),
+      );
+      return;
+    }
+
+    final cartItems = ref.read(cartProvider);
+    if (cartItems.isEmpty) return;
+
+    final deliveryFee = ref.read(deliveryFeeProvider);
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      final orderRepo = OrderRepository();
+      // Generate simple ID for mock
+      final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+      
+      final order = OrderModel.fromCart(
+        orderId: orderId,
+        userId: user.uid,
+        userName: user.name,
+        userPhone: user.phone,
+        cartItems: cartItems,
+        deliveryAddress: user.address,
+        deliveryFee: deliveryFee,
+      );
+
+      await orderRepo.placeOrder(order);
+
+      if (!context.mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Clear cart
+      ref.read(cartProvider.notifier).clearCart();
+
+      // Show success
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order $orderId placed successfully!'),
+          backgroundColor: AppTheme.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      // Navigate to orders tab
+      ref.read(mainShellTabProvider.notifier).state = 3;
+      
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to place order: $e'),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
-  Widget _buildEmptyCart(BuildContext context) {
+  Widget _buildEmptyCart(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.paddingXL),
@@ -273,7 +336,9 @@ class CartScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 28),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                ref.read(mainShellTabProvider.notifier).state = 1;
+              },
               icon: const Icon(Icons.store_outlined),
               label: const Text('Browse Products'),
             ),
@@ -464,9 +529,9 @@ class _QtyButton extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Icon(icon, size: 15, color: color),
       ),

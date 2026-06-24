@@ -144,8 +144,8 @@ class ProductDetailsScreen extends ConsumerWidget {
                                 ? AppTheme.success
                                 : AppTheme.error,
                             bgColor: product.inStock
-                                ? AppTheme.success.withOpacity(0.1)
-                                : AppTheme.error.withOpacity(0.1),
+                                ? AppTheme.success.withValues(alpha: 0.1)
+                                : AppTheme.error.withValues(alpha: 0.1),
                           ),
                         ],
                       ),
@@ -449,9 +449,9 @@ class _CircleButton extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Icon(icon, size: 16, color: color),
       ),

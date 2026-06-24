@@ -7,6 +7,7 @@ import '../../models/product_model.dart';
 import '../../routes/app_router.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_widget.dart';
+import '../main_shell.dart';
 
 class ProductsScreen extends ConsumerStatefulWidget {
   const ProductsScreen({super.key});
@@ -82,7 +83,9 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined),
-                onPressed: () {},
+                onPressed: () {
+                  ref.read(mainShellTabProvider.notifier).state = 2;
+                },
               ),
               if (cartCount > 0)
                 Positioned(

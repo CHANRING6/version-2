@@ -8,6 +8,8 @@ import 'cart/cart_screen.dart';
 import 'orders/order_screen.dart';
 import 'profile/profile_screen.dart';
 
+final mainShellTabProvider = StateProvider<int>((ref) => 0);
+
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -16,8 +18,6 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
-
   final List<Widget> _pages = const [
     HomeScreen(),
     ProductsScreen(),
@@ -29,10 +29,11 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final cartCount = ref.watch(cartItemCountProvider);
+    final currentIndex = ref.watch(mainShellTabProvider);
 
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: currentIndex,
         children: _pages,
       ),
       bottomNavigationBar: Container(
@@ -40,7 +41,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -55,21 +56,21 @@ class _MainShellState extends ConsumerState<MainShell> {
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
                   label: 'Home',
-                  isActive: _currentIndex == 0,
+                  isActive: currentIndex == 0,
                   onTap: () => _setIndex(0),
                 ),
                 _NavItem(
                   icon: Icons.store_outlined,
                   activeIcon: Icons.store_rounded,
                   label: 'Products',
-                  isActive: _currentIndex == 1,
+                  isActive: currentIndex == 1,
                   onTap: () => _setIndex(1),
                 ),
                 _NavItem(
                   icon: Icons.shopping_cart_outlined,
                   activeIcon: Icons.shopping_cart_rounded,
                   label: 'Cart',
-                  isActive: _currentIndex == 2,
+                  isActive: currentIndex == 2,
                   badge: cartCount > 0 ? cartCount : null,
                   onTap: () => _setIndex(2),
                 ),
@@ -77,14 +78,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long_rounded,
                   label: 'Orders',
-                  isActive: _currentIndex == 3,
+                  isActive: currentIndex == 3,
                   onTap: () => _setIndex(3),
                 ),
                 _NavItem(
                   icon: Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                   label: 'Profile',
-                  isActive: _currentIndex == 4,
+                  isActive: currentIndex == 4,
                   onTap: () => _setIndex(4),
                 ),
               ],
@@ -96,8 +97,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   void _setIndex(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
+    ref.read(mainShellTabProvider.notifier).state = index;
   }
 }
 

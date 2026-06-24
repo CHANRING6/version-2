@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_model.dart';
+import '../../repositories/auth_repository.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final AuthRepository _authRepository = AuthRepository();
 
   // ── Auth State Stream ─────────────────────────────────────────
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -14,7 +15,7 @@ class AuthService {
   String? get currentUid => _auth.currentUser?.uid;
 
   // ─────────────────────────────────────────────────────────────
-  // REGISTER — Firebase Auth only, no Firestore
+  // REGISTER
   // ─────────────────────────────────────────────────────────────
   Future<UserModel> register({
     required String name,
@@ -29,12 +30,7 @@ class AuthService {
       );
       await result.user!.updateDisplayName(name.trim());
 
-      // Save extra fields locally since we skip Firestore
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_phone_${result.user!.uid}', phone.trim());
-      await prefs.setString('user_address_${result.user!.uid}', '');
-
-      return UserModel(
+      final userModel = UserModel(
         uid: result.user!.uid,
         name: name.trim(),
         email: email.trim(),
@@ -43,13 +39,17 @@ class AuthService {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+
+      await _authRepository.createUser(userModel);
+
+      return userModel;
     } catch (e) {
       throw _parseError(e);
     }
   }
 
   // ─────────────────────────────────────────────────────────────
-  // LOGIN — Firebase Auth only, no Firestore
+  // LOGIN
   // ─────────────────────────────────────────────────────────────
   Future<UserModel> login({
     required String email,
@@ -60,7 +60,7 @@ class AuthService {
         email: email.trim(),
         password: password.trim(),
       );
-      return await _buildUserModel(result.user!);
+      return await getUserProfile(result.user!.uid);
     } catch (e) {
       throw _parseError(e);
     }
@@ -79,7 +79,22 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
       final result = await _auth.signInWithCredential(credential);
-      return await _buildUserModel(result.user!);
+      
+      var userProfile = await _authRepository.getUser(result.user!.uid);
+      if (userProfile == null) {
+         userProfile = UserModel(
+          uid: result.user!.uid,
+          name: result.user!.displayName ?? 'User',
+          email: result.user!.email ?? '',
+          phone: '',
+          photoUrl: result.user!.photoURL ?? '',
+          role: UserRole.customer,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await _authRepository.createUser(userProfile);
+      }
+      return userProfile;
     } catch (e) {
       throw _parseError(e);
     }
@@ -107,26 +122,29 @@ class AuthService {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // GET USER PROFILE — reads from Firebase Auth + SharedPrefs
-  // No Firestore call so production rules don't matter
+  // GET USER PROFILE
   // ─────────────────────────────────────────────────────────────
   Future<UserModel> getUserProfile(String uid) async {
-    final firebaseUser = _auth.currentUser;
-    if (firebaseUser == null) {
-      return UserModel(
-        uid: uid,
-        name: 'User',
-        email: '',
-        phone: '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    final userProfile = await _authRepository.getUser(uid);
+    if (userProfile != null) {
+      return userProfile;
     }
-    return await _buildUserModel(firebaseUser);
+    
+    // Fallback if not found in Firestore
+    final firebaseUser = _auth.currentUser;
+    return UserModel(
+      uid: uid,
+      name: firebaseUser?.displayName ?? 'User',
+      email: firebaseUser?.email ?? '',
+      phone: '',
+      photoUrl: firebaseUser?.photoURL ?? '',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
-  // UPDATE PROFILE — saves to Firebase Auth + SharedPrefs
+  // UPDATE PROFILE
   // ─────────────────────────────────────────────────────────────
   Future<UserModel> updateProfile({
     required String uid,
@@ -139,40 +157,19 @@ class AuthService {
       if (name != null && currentUser != null) {
         await currentUser!.updateDisplayName(name.trim());
       }
-      final prefs = await SharedPreferences.getInstance();
-      if (phone != null) {
-        await prefs.setString('user_phone_$uid', phone.trim());
-      }
-      if (address != null) {
-        await prefs.setString('user_address_$uid', address.trim());
-      }
-      return await _buildUserModel(currentUser!);
+      
+      final updateFields = <String, dynamic>{};
+      if (name != null) updateFields['name'] = name.trim();
+      if (phone != null) updateFields['phone'] = phone.trim();
+      if (address != null) updateFields['address'] = address.trim();
+      if (photoUrl != null) updateFields['photoUrl'] = photoUrl.trim();
+
+      await _authRepository.updateUser(uid, updateFields);
+      
+      return await getUserProfile(uid);
     } catch (e) {
       throw _parseError(e);
     }
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // PRIVATE: Build UserModel from Firebase Auth + SharedPrefs
-  // ─────────────────────────────────────────────────────────────
-  Future<UserModel> _buildUserModel(User firebaseUser) async {
-    final prefs = await SharedPreferences.getInstance();
-    final phone =
-        prefs.getString('user_phone_${firebaseUser.uid}') ?? '';
-    final address =
-        prefs.getString('user_address_${firebaseUser.uid}') ?? '';
-
-    return UserModel(
-      uid: firebaseUser.uid,
-      name: firebaseUser.displayName ?? 'User',
-      email: firebaseUser.email ?? '',
-      phone: phone,
-      photoUrl: firebaseUser.photoURL ?? '',
-      address: address,
-      role: UserRole.customer,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -183,22 +180,30 @@ class AuthService {
       return _codeToMessage(e.code);
     }
     final str = e.toString();
-    if (str.contains('user-not-found'))
+    if (str.contains('user-not-found')) {
       return 'No account found with this email.';
-    if (str.contains('wrong-password'))
+    }
+    if (str.contains('wrong-password')) {
       return 'Incorrect password. Please try again.';
-    if (str.contains('email-already-in-use'))
+    }
+    if (str.contains('email-already-in-use')) {
       return 'An account with this email already exists.';
-    if (str.contains('weak-password'))
+    }
+    if (str.contains('weak-password')) {
       return 'Password must be at least 6 characters.';
-    if (str.contains('invalid-email'))
+    }
+    if (str.contains('invalid-email')) {
       return 'Please enter a valid email address.';
-    if (str.contains('too-many-requests'))
+    }
+    if (str.contains('too-many-requests')) {
       return 'Too many attempts. Please try again later.';
-    if (str.contains('network-request-failed'))
+    }
+    if (str.contains('network-request-failed')) {
       return 'Network error. Check your connection.';
-    if (str.contains('invalid-credential'))
+    }
+    if (str.contains('invalid-credential')) {
       return 'Invalid credentials. Please try again.';
+    }
     if (str.contains('cancelled')) return 'Sign-in was cancelled.';
     return e.toString();
   }

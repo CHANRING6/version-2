@@ -45,8 +45,9 @@ final currentUserProvider = FutureProvider<UserModel?>((ref) async {
 // ─────────────────────────────────────────────────────────────
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final AuthService _authService;
+  final Ref _ref;
 
-  AuthNotifier(this._authService) : super(const AsyncValue.data(null));
+  AuthNotifier(this._authService, this._ref) : super(const AsyncValue.data(null));
 
   // ── Register ───────────────────────────────────────────────
   Future<bool> register({
@@ -134,6 +135,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         photoUrl: photoUrl,
       );
       state = AsyncValue.data(user);
+      _ref.invalidate(currentUserProvider);
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -161,7 +163,7 @@ final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>(
   (ref) {
     final authService = ref.watch(authServiceProvider);
-    return AuthNotifier(authService);
+    return AuthNotifier(authService, ref);
   },
 );
 

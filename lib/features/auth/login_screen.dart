@@ -36,9 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (!mounted) return;
 
-    if (success) {
-      context.go(AppRoutes.home);
-    } else {
+    if (!success) {
       final error = ref.read(authErrorProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -60,9 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (!mounted) return;
 
-    if (success) {
-      context.go(AppRoutes.home);
-    } else {
+    if (!success) {
       final error = ref.read(authErrorProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -109,7 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             BorderRadius.circular(AppTheme.radiusLG),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primary.withOpacity(0.3),
+                            color: AppTheme.primary.withValues(alpha: 0.3),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),

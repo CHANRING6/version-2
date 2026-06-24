@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../core/theme/app_theme.dart';
 import '../models/product_model.dart';
 import '../providers/product_provider.dart';
@@ -53,7 +54,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
             boxShadow: _hovered
                 ? [
               BoxShadow(
-                color: AppTheme.primary.withOpacity(0.12),
+                color: AppTheme.primary.withValues(alpha: 0.12),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               )
@@ -82,21 +83,13 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                           ? CachedNetworkImage(
                         imageUrl: widget.product.imageUrl,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Container(
-                              color: AppTheme.primaryLight,
-                              child: const Center(
-                                child: SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child:
-                                  CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            color: Colors.white,
+                          ),
+                        ),
                         errorWidget:
                             (context, url, error) =>
                             Container(
@@ -158,7 +151,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                               AppTheme.radiusMD),
                         ),
                         child: Container(
-                          color: Colors.black.withOpacity(0.45),
+                          color: Colors.black.withValues(alpha: 0.45),
                           child: const Center(
                             child: Text(
                               'Out of Stock',
@@ -401,9 +394,9 @@ class _SmallButton extends StatelessWidget {
         width: 26,
         height: 26,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Icon(icon, size: 13, color: color),
       ),

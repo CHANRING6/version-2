@@ -27,6 +27,12 @@ dependencies:
   # Images — loads from URLs, NO Firebase Storage needed
   cached_network_image: ^3.4.1
 
+  # Charts — for admin dashboard
+  fl_chart: ^0.68.0
+
+  # Loading skeleton animation
+  shimmer: ^3.0.0
+
   # Utils
   intl: ^0.19.0
   uuid: ^4.5.1

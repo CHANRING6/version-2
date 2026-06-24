@@ -191,7 +191,7 @@ class _ForgotPasswordScreenState
             width: 90,
             height: 90,
             decoration: BoxDecoration(
-              color: AppTheme.success.withOpacity(0.1),
+              color: AppTheme.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(

@@ -1,151 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/order_model.dart';
 import '../../models/cart_item_model.dart';
 import '../../models/product_model.dart';
 
-// ─────────────────────────────────────────────────────────────
-// Local Orders Provider — no Firestore, no permissions needed
-// Orders are stored in memory for the session
-// ─────────────────────────────────────────────────────────────
-class OrderNotifier extends StateNotifier<List<OrderModel>> {
-  OrderNotifier() : super(_sampleOrders());
+import '../../repositories/order_repository.dart';
 
-  // Add a new order
-  void addOrder(OrderModel order) {
-    state = [order, ...state];
-  }
-
-  // Update order status
-  void updateStatus(String orderId, OrderStatus status) {
-    state = state.map((o) {
-      if (o.id == orderId) return o.copyWith(status: status);
-      return o;
-    }).toList();
-  }
-
-  void clearOrders() => state = [];
-
-  // ── Sample orders so screen is never empty ─────────────────
-  static List<OrderModel> _sampleOrders() {
-    return [
-      OrderModel(
-        id: 'ORD001KE',
-        userId: 'sample',
-        userName: 'Sample User',
-        userPhone: '+254 700 000 000',
-        items: [
-          OrderItemSnapshot(
-            productId: 'p001',
-            productName: 'Fresh Strawberries',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=200',
-            productUnit: 'punnet',
-            priceAtOrder: 250,
-            quantity: 2,
-          ),
-          OrderItemSnapshot(
-            productId: 'p010',
-            productName: 'Fresh Whole Milk',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200',
-            productUnit: '500ml',
-            priceAtOrder: 65,
-            quantity: 3,
-          ),
-          OrderItemSnapshot(
-            productId: 'p011',
-            productName: 'Free Range Eggs',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200',
-            productUnit: 'tray (30)',
-            priceAtOrder: 180,
-            quantity: 1,
-          ),
-        ],
-        subtotal: 875,
-        deliveryFee: 0,
-        total: 875,
-        status: OrderStatus.delivered,
-        deliveryAddress: 'Westlands, Nairobi',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      OrderModel(
-        id: 'ORD002KE',
-        userId: 'sample',
-        userName: 'Sample User',
-        userPhone: '+254 700 000 000',
-        items: [
-          OrderItemSnapshot(
-            productId: 'p014',
-            productName: 'Beef Mince',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=200',
-            productUnit: 'kg',
-            priceAtOrder: 550,
-            quantity: 1,
-          ),
-          OrderItemSnapshot(
-            productId: 'p017',
-            productName: 'Sliced White Bread',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200',
-            productUnit: 'loaf',
-            priceAtOrder: 65,
-            quantity: 2,
-          ),
-        ],
-        subtotal: 680,
-        deliveryFee: 200,
-        total: 880,
-        status: OrderStatus.shipped,
-        deliveryAddress: 'Kilimani, Nairobi',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
-      ),
-      OrderModel(
-        id: 'ORD003KE',
-        userId: 'sample',
-        userName: 'Sample User',
-        userPhone: '+254 700 000 000',
-        items: [
-          OrderItemSnapshot(
-            productId: 'p049',
-            productName: 'Baby Diapers',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1612035165219-7e3b89dbb5bf?w=200',
-            productUnit: 'pack (40)',
-            priceAtOrder: 950,
-            quantity: 1,
-          ),
-          OrderItemSnapshot(
-            productId: 'p050',
-            productName: 'Baby Wipes',
-            productImageUrl:
-                'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200',
-            productUnit: 'pack (80)',
-            priceAtOrder: 280,
-            quantity: 2,
-          ),
-        ],
-        subtotal: 1510,
-        deliveryFee: 200,
-        total: 1710,
-        status: OrderStatus.confirmed,
-        deliveryAddress: 'Karen, Nairobi',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-    ];
-  }
-}
-
-final orderProvider =
-    StateNotifierProvider<OrderNotifier, List<OrderModel>>(
-        (ref) => OrderNotifier());
+final userOrdersStreamProvider = StreamProvider<List<OrderModel>>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+  return userAsync.when(
+    data: (user) {
+      if (user == null) return Stream.value([]);
+      final repo = OrderRepository();
+      return repo.getUserOrdersStream(user.uid);
+    },
+    loading: () => Stream.value([]),
+    error: (_, __) => Stream.value([]),
+  );
+});
 
 // ─────────────────────────────────────────────────────────────
 // Orders Screen
@@ -155,8 +31,7 @@ class OrderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(orderProvider);
-    final userAsync = ref.watch(currentUserProvider);
+    final ordersAsync = ref.watch(userOrdersStreamProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -164,40 +39,48 @@ class OrderScreen extends ConsumerWidget {
         title: const Text('My Orders'),
         actions: [
           // Order count badge
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryLight,
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: Text(
-                  '${orders.length} order${orders.length == 1 ? '' : 's'}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w600,
+          ordersAsync.when(
+            data: (orders) => Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryLight,
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusFull),
+                  ),
+                  child: Text(
+                    '${orders.length} order${orders.length == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
         ],
       ),
-      body: orders.isEmpty
-          ? _buildEmptyOrders(context)
-          : ListView.separated(
-              padding: const EdgeInsets.all(AppTheme.paddingMD),
-              itemCount: orders.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: 12),
-              itemBuilder: (context, index) =>
-                  _OrderCard(order: orders[index]),
-            ),
+      body: ordersAsync.when(
+        data: (orders) => orders.isEmpty
+            ? _buildEmptyOrders(context)
+            : ListView.separated(
+                padding: const EdgeInsets.all(AppTheme.paddingMD),
+                itemCount: orders.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) =>
+                    _OrderCard(order: orders[index]),
+              ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Error loading orders: $error')),
+      ),
     );
   }
 
@@ -348,13 +231,22 @@ class _OrderCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(
                                   AppTheme.radiusSM),
                               child: item.productImageUrl.isNotEmpty
-                                  ? Image.network(
-                                      item.productImageUrl,
+                                  ? CachedNetworkImage(
+                                      imageUrl: item.productImageUrl,
                                       width: 38,
                                       height: 38,
                                       fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (_, __, ___) => Container(
+                                      placeholder: (context, url) => Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: Container(
+                                          width: 38,
+                                          height: 38,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      errorWidget:
+                                          (context, url, error) => Container(
                                         width: 38,
                                         height: 38,
                                         color: AppTheme.primaryLight,
@@ -473,7 +365,7 @@ class _OrderCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.success.withOpacity(0.1),
+                      color: AppTheme.success.withValues(alpha: 0.1),
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusSM),
                     ),
@@ -518,7 +410,7 @@ class _OrderCard extends StatelessWidget {
   }
 
   Color _statusBgColor(OrderStatus status) =>
-      _statusColor(status).withOpacity(0.1);
+      _statusColor(status).withValues(alpha: 0.1);
 
   String _formatDate(DateTime date) {
     const months = [

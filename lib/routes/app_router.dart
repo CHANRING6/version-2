@@ -10,10 +10,16 @@ import '../features/auth/register_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
 import '../features/main_shell.dart';
 import '../features/products/product_details_screen.dart';
+import '../features/admin/admin_shell.dart';
+import '../features/admin/admin_dashboard_screen.dart';
+import '../features/admin/admin_products_screen.dart';
+import '../features/admin/admin_product_form_screen.dart';
+import '../features/admin/admin_orders_screen.dart';
+import '../features/admin/admin_users_screen.dart';
+import '../features/admin/admin_categories_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
-// Route name constants — use these instead of raw strings
-// so a typo is a compile error, not a silent broken nav
+// Route name constants
 // ─────────────────────────────────────────────────────────────
 class AppRoutes {
   static const splash         = '/';
@@ -24,25 +30,51 @@ class AppRoutes {
   static const home           = '/home';
   static const productDetails = '/product/:id';
 
-  // Helper to build the product details path with a real ID
+  // Admin routes
+  static const adminDashboard   = '/admin';
+  static const adminProducts    = '/admin/products';
+  static const adminProductForm = '/admin/products/new';
+  static const adminProductEdit = '/admin/products/edit/:id';
+  static const adminOrders      = '/admin/orders';
+  static const adminUsers       = '/admin/users';
+  static const adminCategories  = '/admin/categories';
+
+  // Helpers
   static String productDetailsPath(String id) => '/product/$id';
+  static String adminProductFormEdit(String id) => '/admin/products/edit/$id';
 }
 
 // ─────────────────────────────────────────────────────────────
+// Router Notifier
+// ─────────────────────────────────────────────────────────────
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (_, __) {
+      notifyListeners();
+    });
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
+// ─────────────────────────────────────────────────────────────
 // Router Provider
-// Declared as a Provider so it can watch authStateProvider
-// and redirect automatically on login/logout
 // ─────────────────────────────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // We use a listenable so GoRouter re-evaluates redirect
-  // whenever auth state changes
   final authState = ref.watch(authStateProvider);
+  final userAsync = ref.watch(currentUserProvider);
+
+  final routerNotifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: false,
+    refreshListenable: routerNotifier,
 
-    // ── Global Redirect Logic ─────────────────────────────────
     redirect: (context, routerState) {
       final isLoggedIn = authState.maybeWhen(
         data: (user) => user != null,
@@ -50,13 +82,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
 
       final isAuthLoading = authState.isLoading;
-
-      // While auth state is loading don't redirect — stay put
       if (isAuthLoading) return null;
 
       final location = routerState.matchedLocation;
 
-      // Pages that don't require login
       final publicRoutes = [
         AppRoutes.splash,
         AppRoutes.onboarding,
@@ -67,12 +96,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isPublicRoute = publicRoutes.contains(location);
 
-      // Not logged in and trying to access a protected page
+      // Not logged in → go to login
       if (!isLoggedIn && !isPublicRoute) {
         return AppRoutes.login;
       }
 
-      // Logged in but on a public auth page — send to home
+      // Logged in on a public auth page → go home
       if (isLoggedIn &&
           (location == AppRoutes.login ||
               location == AppRoutes.register ||
@@ -80,50 +109,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.home;
       }
 
-      // No redirect needed
+      // Admin route guard — non-admins can't access /admin/*
+      if (location.startsWith('/admin')) {
+        final isAdmin = userAsync.maybeWhen(
+          data: (user) => user?.isAdmin ?? false,
+          orElse: () => false,
+        );
+        if (!isAdmin) return AppRoutes.home;
+      }
+
       return null;
     },
 
-    // ── Routes ────────────────────────────────────────────────
     routes: [
-
-      // Splash
       GoRoute(
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
       ),
-
-      // Onboarding
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
-
-      // Login
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
       ),
-
-      // Register
       GoRoute(
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-
-      // Forgot Password
       GoRoute(
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-
-      // Main Shell (Home + bottom nav)
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const MainShell(),
       ),
-
-      // Product Details
       GoRoute(
         path: AppRoutes.productDetails,
         builder: (context, state) {
@@ -131,9 +153,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ProductDetailsScreen(productId: productId);
         },
       ),
+
+      // ── Admin Routes — wrapped in AdminShell (drawer) ─────
+      ShellRoute(
+        builder: (context, state, child) => AdminShell(child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.adminDashboard,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminDashboardScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminProducts,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminProductsScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminProductForm,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminProductFormScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminProductEdit,
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id'] ?? '';
+              return NoTransitionPage(child: AdminProductFormScreen(productId: id));
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.adminOrders,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminOrdersScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminUsers,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminUsersScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminCategories,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminCategoriesScreen()),
+          ),
+        ],
+      ),
     ],
 
-    // ── Error Page ────────────────────────────────────────────
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Page Not Found')),
       body: Center(
@@ -159,10 +218,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// ─────────────────────────────────────────────────────────────
-// AppRouter class — kept for backward compatibility
-// main.dart uses appRouterProvider directly via ConsumerWidget
-// ─────────────────────────────────────────────────────────────
 class AppRouter {
   static GoRouter createRouter(WidgetRef ref) {
     return ref.watch(appRouterProvider);

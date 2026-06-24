@@ -93,7 +93,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius:
                         BorderRadius.circular(AppTheme.radiusXL),
                   ),
@@ -122,7 +122,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   'Everything you need, delivered.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -135,7 +135,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white.withOpacity(0.7),
+                      Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ),

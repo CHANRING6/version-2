@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product_model.dart';
 import '../models/cart_item_model.dart';
+import '../repositories/product_repository.dart';
+
+final productRepositoryProvider = Provider<ProductRepository>((ref) {
+  return ProductRepository();
+});
 
 // ─────────────────────────────────────────────────────────────
 // 50 SUPERMARKET PRODUCTS — 15 categories, Unsplash images
@@ -490,12 +495,14 @@ final _mockProducts = <ProductModel>[
 // PROVIDERS
 // ─────────────────────────────────────────────────────────────
 final productsStreamProvider = StreamProvider<List<ProductModel>>((ref) {
-  return Stream.value(_mockProducts);
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.getProductsStream();
 });
 
 final featuredProductsProvider = StreamProvider<List<ProductModel>>((ref) {
-  return Stream.value(
-      _mockProducts.where((p) => p.isFeatured).toList());
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.getProductsStream().map(
+      (products) => products.where((p) => p.isFeatured).toList());
 });
 
 final selectedCategoryProvider =
@@ -530,10 +537,11 @@ final filteredProductsProvider =
 
 final productByIdProvider =
     FutureProvider.family<ProductModel?, String>((ref, productId) async {
+  final products = await ref.watch(productsStreamProvider.future);
   try {
-    return _mockProducts.firstWhere((p) => p.id == productId);
+    return products.firstWhere((p) => p.id == productId);
   } catch (_) {
-    return _mockProducts.isNotEmpty ? _mockProducts.first : null;
+    return null;
   }
 });
 
