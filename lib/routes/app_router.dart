@@ -17,6 +17,9 @@ import '../features/admin/admin_product_form_screen.dart';
 import '../features/admin/admin_orders_screen.dart';
 import '../features/admin/admin_users_screen.dart';
 import '../features/admin/admin_categories_screen.dart';
+import '../features/admin/admin_database_screen.dart';
+import '../features/admin/admin_api_screen.dart';
+import '../features/admin/admin_networking_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Route name constants
@@ -38,6 +41,9 @@ class AppRoutes {
   static const adminOrders      = '/admin/orders';
   static const adminUsers       = '/admin/users';
   static const adminCategories  = '/admin/categories';
+  static const adminDatabase    = '/admin/database';
+  static const adminApi         = '/admin/api';
+  static const adminNetworking  = '/admin/networking';
 
   // Helpers
   static String productDetailsPath(String id) => '/product/$id';
@@ -188,6 +194,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.adminCategories,
             pageBuilder: (context, state) => const NoTransitionPage(child: AdminCategoriesScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminDatabase,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminDatabaseScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminApi,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminApiScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.adminNetworking,
+            pageBuilder: (context, state) => const NoTransitionPage(child: AdminNetworkingScreen()),
           ),
         ],
       ),

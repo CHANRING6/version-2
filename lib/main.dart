@@ -19,7 +19,7 @@ void main() async {
     ),
   );
 
-  // ✅ Lock to portrait only — prevents layout breaking on rotation
+  // ✅ Portrait lock — only applies on mobile, skipped on web
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -47,7 +47,6 @@ class MegaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
-      // ✅ Ensures keyboard doesn't push layout on Android
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

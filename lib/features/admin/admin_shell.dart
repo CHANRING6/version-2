@@ -96,6 +96,42 @@ class _AdminDrawer extends ConsumerWidget {
                     onTap: () => _navigate(context, AppRoutes.adminCategories),
                   ),
 
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                    child: Text(
+                      'TECHNICAL',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white.withValues(alpha: 0.3),
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+
+                  _DrawerItem(
+                    icon: Icons.storage_rounded,
+                    label: 'Database',
+                    route: AppRoutes.adminDatabase,
+                    isActive: location == AppRoutes.adminDatabase,
+                    onTap: () => _navigate(context, AppRoutes.adminDatabase),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.api_rounded,
+                    label: 'API Info',
+                    route: AppRoutes.adminApi,
+                    isActive: location == AppRoutes.adminApi,
+                    onTap: () => _navigate(context, AppRoutes.adminApi),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.wifi_rounded,
+                    label: 'Networking',
+                    route: AppRoutes.adminNetworking,
+                    isActive: location == AppRoutes.adminNetworking,
+                    onTap: () => _navigate(context, AppRoutes.adminNetworking),
+                  ),
+
                   const SizedBox(height: 16),
                   const Divider(color: Color(0xFF1E3A5F)),
                   const SizedBox(height: 8),

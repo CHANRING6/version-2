@@ -340,6 +340,43 @@ class AdminDashboardScreen extends ConsumerWidget {
               color: const Color(0xFF8B5CF6),
               onTap: () => context.push(AppRoutes.adminCategories),
             ),
+            const SizedBox(height: 8),
+
+            // ── Technical Section ───────────────────────────
+            const Padding(
+              padding: EdgeInsets.only(top: 8, bottom: 4),
+              child: Text(
+                'Technical',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textDark,
+                ),
+              ),
+            ),
+            _NavTile(
+              icon: Icons.storage_rounded,
+              title: 'Database',
+              subtitle: 'Firestore structure, schemas & live data',
+              color: const Color(0xFF0EA5E9),
+              onTap: () => context.push(AppRoutes.adminDatabase),
+            ),
+            const SizedBox(height: 8),
+            _NavTile(
+              icon: Icons.api_rounded,
+              title: 'API Info',
+              subtitle: 'All Firebase & Firestore endpoints',
+              color: const Color(0xFFEC4899),
+              onTap: () => context.push(AppRoutes.adminApi),
+            ),
+            const SizedBox(height: 8),
+            _NavTile(
+              icon: Icons.wifi_rounded,
+              title: 'Networking',
+              subtitle: 'Connection status, pings & request log',
+              color: const Color(0xFF10B981),
+              onTap: () => context.push(AppRoutes.adminNetworking),
+            ),
 
             const SizedBox(height: 32),
           ],
