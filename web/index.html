@@ -8,25 +8,14 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png"/>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background: #F8FAFC;
-    }
+    html, body { margin: 0; padding: 0; background: #F8FAFC; }
   </style>
 </head>
 <body>
   {{flutter_js}}
   {{flutter_build_config}}
   <script>
-    _flutter.loader.load({
-      onEntrypointLoaded: async function(engineInitializer) {
-        const appRunner = await engineInitializer.initializeEngine();
-        await appRunner.runApp();
-      }
-    });
+    _flutter.loader.load();
   </script>
 </body>
 </html>
