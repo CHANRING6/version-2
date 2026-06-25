@@ -9,21 +9,28 @@ class OrderRepository {
     return _firestore
         .collection(_collection)
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-            .toList());
+        .map((snapshot) {
+          final orders = snapshot.docs
+              .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+              .toList();
+          // Sort client-side — avoids needing a composite Firestore index
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return orders;
+        });
   }
 
   Stream<List<OrderModel>> getAllOrdersStream() {
     return _firestore
         .collection(_collection)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-            .toList());
+        .map((snapshot) {
+          final orders = snapshot.docs
+              .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+              .toList();
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return orders;
+        });
   }
 
   Future<void> placeOrder(OrderModel order) async {
