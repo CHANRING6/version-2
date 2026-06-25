@@ -12,7 +12,11 @@
   </style>
 </head>
 <body>
-  {{flutter_js}}
-  {{flutter_build_config}}
+  <script src="flutter.js" defer></script>
+  <script>
+    window.addEventListener('load', function() {
+      _flutter.loader.load();
+    });
+  </script>
 </body>
 </html>
