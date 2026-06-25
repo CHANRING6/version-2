@@ -310,23 +310,43 @@ class HomeScreen extends ConsumerWidget {
                 return SliverPadding(
                   padding:
                   const EdgeInsets.fromLTRB(12, 8, 12, 32),
-                  sliver: SliverGrid(
+                  sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                          (context, index) => ProductCard(
-                        product: filtered[index],
-                        onTap: () => context.push(
-                          AppRoutes.productDetailsPath(
-                              filtered[index].id),
-                        ),
-                      ),
-                      childCount: filtered.length,
-                    ),
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 0.55,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
+                      (context, rowIndex) {
+                        final start = rowIndex * 3;
+                        final items = filtered.sublist(
+                          start,
+                          (start + 3).clamp(0, filtered.length),
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (int i = 0; i < 3; i++)
+                                  Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: i == 0 ? 0 : 4,
+                                        right: i == 2 ? 0 : 4,
+                                      ),
+                                      child: i < items.length
+                                          ? ProductCard(
+                                              product: items[i],
+                                              onTap: () => context.push(
+                                                AppRoutes.productDetailsPath(items[i].id),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: (filtered.length / 3).ceil(),
                     ),
                   ),
                 );
