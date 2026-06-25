@@ -632,46 +632,37 @@ class _SeedBannerState extends State<_SeedBanner> {
         borderRadius: BorderRadius.circular(AppTheme.radiusMD),
         border: Border.all(color: const Color(0xFFFED7AA)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('🌱', style: TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'No products yet',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF92400E),
-                    fontSize: 14,
-                  ),
+          Row(children: const [
+            Text('🌱', style: TextStyle(fontSize: 22)),
+            SizedBox(width: 8),
+            Text('No products yet',
+              style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF92400E), fontSize: 14)),
+          ]),
+          const SizedBox(height: 4),
+          const Text('Tap below to seed 40 sample products with real images',
+            style: TextStyle(fontSize: 12, color: Color(0xFFB45309))),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _seeding ? null : _seed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF97316),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMD),
                 ),
-                Text(
-                  'Seed 40 sample products with real images',
-                  style: TextStyle(fontSize: 12, color: Color(0xFFB45309)),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: _seeding ? null : _seed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF97316),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
               ),
+              child: _seeding
+                  ? const SizedBox(width: 18, height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('🌱 Seed 40 Products',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
-            child: _seeding
-                ? const SizedBox(
-                    width: 16, height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Text('Seed', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
