@@ -8,6 +8,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_router.dart';
 import 'admin_shell.dart';
+import '../../seed_data.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -103,6 +104,10 @@ class AdminDashboardScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 20),
+
+            // ── Seed Banner ──────────────────────────────────
+            _SeedBanner(stats: stats),
+
 
             // ── Stats Header ─────────────────────────────────
             const Text(
@@ -573,6 +578,102 @@ class _NavTile extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, color: color),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Seed Banner ───────────────────────────────────────────────
+class _SeedBanner extends StatefulWidget {
+  final dynamic stats;
+  const _SeedBanner({required this.stats});
+
+  @override
+  State<_SeedBanner> createState() => _SeedBannerState();
+}
+
+class _SeedBannerState extends State<_SeedBanner> {
+  bool _seeding = false;
+  bool _done = false;
+
+  Future<void> _seed() async {
+    setState(() => _seeding = true);
+    try {
+      await SeedData.run();
+      setState(() { _seeding = false; _done = true; });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ 40 products added to Firestore!'),
+            backgroundColor: Color(0xFF22C55E),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _seeding = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasProducts = widget.stats.totalProducts > 0;
+    if (hasProducts || _done) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: Row(
+        children: [
+          const Text('🌱', style: TextStyle(fontSize: 28)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'No products yet',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF92400E),
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  'Seed 40 sample products with real images',
+                  style: TextStyle(fontSize: 12, color: Color(0xFFB45309)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: _seeding ? null : _seed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF97316),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              ),
+            ),
+            child: _seeding
+                ? const SizedBox(
+                    width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Seed', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }
