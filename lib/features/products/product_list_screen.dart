@@ -74,7 +74,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     final cartCount = ref.watch(cartItemCountProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Products'),
         actions: [

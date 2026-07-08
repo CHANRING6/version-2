@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/error_handler.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/order_model.dart';
 import '../../models/cart_item_model.dart';
@@ -34,7 +35,7 @@ class OrderScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(userOrdersStreamProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('My Orders'),
         actions: [
@@ -79,7 +80,29 @@ class OrderScreen extends ConsumerWidget {
                     _OrderCard(order: orders[index]),
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error loading orders: $error')),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 48, color: AppTheme.textHint),
+                const SizedBox(height: 12),
+                Text(
+                  AppErrorHandler.friendlyMessage(error),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppTheme.textLight),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => ref.invalidate(userOrdersStreamProvider),
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

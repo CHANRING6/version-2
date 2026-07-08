@@ -25,7 +25,7 @@ class AdminShell extends ConsumerWidget {
 
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       drawer: _AdminDrawer(userAsync: userAsync),
       // The child (individual admin screen) provides its own Scaffold body.
       // We use a transparent wrapper so the drawer overlay works correctly.

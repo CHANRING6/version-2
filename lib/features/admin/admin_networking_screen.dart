@@ -182,7 +182,7 @@ class _AdminNetworkingScreenState extends State<AdminNetworkingScreen> {
     final user = _auth.currentUser;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(
         title: '📡 Networking',
         actions: [

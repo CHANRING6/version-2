@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/error_handler.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../models/product_model.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final cartCount = ref.watch(cartItemCountProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -283,7 +284,7 @@ class HomeScreen extends ConsumerWidget {
                             size: 48, color: AppTheme.textHint),
                         const SizedBox(height: 12),
                         Text(
-                          'Failed to load products.\n${e.toString()}',
+                          'Failed to load products.\n${AppErrorHandler.friendlyMessage(e)}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               color: AppTheme.textLight),

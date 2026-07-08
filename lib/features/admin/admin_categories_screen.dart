@@ -33,7 +33,7 @@ class AdminCategoriesScreen extends ConsumerWidget {
         ProductCategory.values.where((c) => stats[c]!.count == 0).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const AdminAppBar(title: 'Categories'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

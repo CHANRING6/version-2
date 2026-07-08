@@ -1,7 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/product_provider.dart';
+import '../models/product_model.dart';
 import '../core/theme/app_theme.dart';
+import '../core/services/shake_service.dart';
+import '../core/utils/app_notify.dart';
 import 'home/home_screen.dart';
 import 'products/product_list_screen.dart';
 import 'cart/cart_screen.dart';
@@ -26,6 +32,169 @@ class _MainShellState extends ConsumerState<MainShell> {
     ProfileScreen(),
   ];
 
+  late final ShakeDetector _shakeDetector;
+  bool _dealSheetOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Week 9 device sensor feature — shake the phone for a surprise deal.
+    _shakeDetector = ShakeDetector(onShake: _onShake)..start();
+  }
+
+  @override
+  void dispose() {
+    _shakeDetector.stop();
+    super.dispose();
+  }
+
+  void _onShake() {
+    if (_dealSheetOpen || !mounted) return;
+
+    final products = ref.read(productsStreamProvider).value;
+    if (products == null || products.isEmpty) return;
+
+    final onSale = products
+        .where((p) => p.originalPrice != null && p.originalPrice! > p.price)
+        .toList();
+    final pool = onSale.isNotEmpty ? onSale : products;
+    final deal = pool[Random().nextInt(pool.length)];
+
+    HapticFeedback.mediumImpact();
+    _showDealSheet(deal);
+  }
+
+  void _showDealSheet(ProductModel product) {
+    _dealSheetOpen = true;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXL),
+        ),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.divider,
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '🎉 Shake Deal!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textDark,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'You shook up a surprise pick',
+              style: TextStyle(fontSize: 13, color: AppTheme.textLight),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl,
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                        width: 72, height: 72, color: AppTheme.primaryLight),
+                    errorWidget: (_, __, ___) => Container(
+                      width: 72,
+                      height: 72,
+                      color: AppTheme.primaryLight,
+                      child: const Icon(Icons.shopping_bag_outlined,
+                          color: AppTheme.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'KSh ${product.price.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          if (product.originalPrice != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              'KSh ${product.originalPrice!.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textHint,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('No thanks'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ref.read(cartProvider.notifier).addItem(product);
+                      Navigator.pop(ctx);
+                      AppNotify.success(
+                          context, '${product.name} added to cart!');
+                    },
+                    child: const Text('Add to Cart'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(() => _dealSheetOpen = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartCount = ref.watch(cartItemCountProvider);
@@ -38,10 +207,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? 0.24
+                      : 0.06),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),

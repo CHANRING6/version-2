@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_notify.dart';
+import '../../core/utils/error_handler.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/cart_item_model.dart';
@@ -24,7 +26,7 @@ class CartScreen extends ConsumerWidget {
     final subtotalValue = ref.watch(cartSubtotalProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('My Cart (${cartItems.length})'),
         actions: [
@@ -227,9 +229,10 @@ class CartScreen extends ConsumerWidget {
     
     final user = await ref.read(currentUserProvider.future);
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get user profile. Please login again.')),
-      );
+      if (context.mounted) {
+        AppNotify.error(
+            context, 'Failed to get user profile. Please login again.');
+      }
       return;
     }
 
@@ -271,13 +274,7 @@ class CartScreen extends ConsumerWidget {
       ref.read(cartProvider.notifier).clearCart();
 
       // Show success
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Order $orderId placed successfully!'),
-          backgroundColor: AppTheme.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppNotify.success(context, 'Order $orderId placed successfully!');
 
       // Navigate to orders tab
       ref.read(mainShellTabProvider.notifier).state = 3;
@@ -285,13 +282,8 @@ class CartScreen extends ConsumerWidget {
     } catch (e) {
       if (!context.mounted) return;
       Navigator.pop(context); // close loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to place order: $e'),
-          backgroundColor: AppTheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppNotify.error(
+          context, 'Could not place your order. ${AppErrorHandler.friendlyMessage(e)}');
     }
   }
 

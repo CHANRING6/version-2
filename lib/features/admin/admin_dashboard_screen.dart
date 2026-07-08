@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/error_handler.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_router.dart';
@@ -20,7 +21,7 @@ class AdminDashboardScreen extends ConsumerWidget {
     final weeklySales = ref.watch(weeklySalesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(
         title: '👑 Admin Dashboard',
         actions: [
@@ -613,7 +614,9 @@ class _SeedBannerState extends State<_SeedBanner> {
       setState(() => _seeding = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text(AppErrorHandler.friendlyMessage(e)),
+              backgroundColor: Colors.red),
         );
       }
     }

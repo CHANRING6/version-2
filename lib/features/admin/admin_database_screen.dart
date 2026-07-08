@@ -58,7 +58,7 @@ class _AdminDatabaseScreenState extends State<AdminDatabaseScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(title: '🗄️ Database Structure'),
       body: Column(
         children: [

@@ -43,7 +43,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(
         title: 'Products',
         actions: [

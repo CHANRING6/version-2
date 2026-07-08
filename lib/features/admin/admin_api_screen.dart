@@ -35,7 +35,7 @@ class _AdminApiScreenState extends State<AdminApiScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(title: '🔌 API Information'),
       body: Column(
         children: [

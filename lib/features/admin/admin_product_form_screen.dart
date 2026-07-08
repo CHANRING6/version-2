@@ -84,7 +84,7 @@ class _AdminProductFormScreenState
     final isEditing = _editingProduct != null;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AdminAppBar(
         title: isEditing ? 'Edit Product' : 'Add Product',
         showBackButton: true,

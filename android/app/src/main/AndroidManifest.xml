@@ -4,6 +4,14 @@
     <!-- Images won't load, Firebase Auth won't work, nothing network-related works -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Camera — profile photo capture (Week 9) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
+    <!-- GPS / location — delivery address (Week 9) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
         android:label="Mega Mart"
         android:name="${applicationName}"

@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Mega Mart uses your camera to update your profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Mega Mart needs access to your photos to choose a profile photo.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Mega Mart uses your location to set your delivery address.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

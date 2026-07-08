@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/error_handler.dart';
 import '../../providers/product_provider.dart';
 import '../../models/product_model.dart';
 import '../../widgets/loading_widget.dart';
@@ -28,7 +29,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         appBar: AppBar(),
         body: Center(
           child: Text(
-            'Product not found.\n${e.toString()}',
+            'Product not found.\n${AppErrorHandler.friendlyMessage(e)}',
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppTheme.textLight),
           ),
@@ -49,7 +50,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         final quantity = cartNotifier.getQuantity(product.id);
 
         return Scaffold(
-          backgroundColor: AppTheme.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: CustomScrollView(
             slivers: [
 

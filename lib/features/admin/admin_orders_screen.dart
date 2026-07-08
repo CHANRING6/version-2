@@ -25,7 +25,7 @@ class _AdminOrdersScreenState extends ConsumerState<AdminOrdersScreen> {
         : orders.where((o) => o.status == _filterStatus).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const AdminAppBar(title: 'Orders'),
       body: Column(
         children: [

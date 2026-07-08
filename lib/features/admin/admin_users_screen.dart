@@ -39,7 +39,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const AdminAppBar(title: 'Users'),
       body: Column(
         children: [
