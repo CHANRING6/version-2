@@ -8,6 +8,7 @@ import '../features/onboarding/onboarding_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
+import '../features/auth/biometric_lock_screen.dart';
 import '../features/main_shell.dart';
 import '../features/products/product_details_screen.dart';
 import '../features/admin/admin_shell.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const login          = '/login';
   static const register       = '/register';
   static const forgotPassword = '/forgot-password';
+  static const biometricLock  = '/biometric-lock';
   static const home           = '/home';
   static const productDetails = '/product/:id';
 
@@ -147,6 +149,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.biometricLock,
+        builder: (context, state) => const BiometricLockScreen(),
       ),
       GoRoute(
         path: AppRoutes.home,

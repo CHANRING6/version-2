@@ -6,11 +6,14 @@ import '../../core/utils/app_notify.dart';
 import '../../core/utils/error_handler.dart';
 import '../../core/services/image_service.dart';
 import '../../core/services/location_service.dart';
+import '../../core/services/biometric_service.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/security_provider.dart';
 import '../../routes/app_router.dart';
 import '../../widgets/avatar_image.dart';
+import '../bluetooth/bluetooth_scan_screen.dart';
 import '../main_shell.dart';
 
 enum _PhotoSource { camera, gallery }
@@ -23,6 +26,7 @@ class ProfileScreen extends ConsumerWidget {
     final userAsync = ref.watch(currentUserProvider);
     final authNotifier = ref.read(authNotifierProvider.notifier);
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final biometricLockOn = ref.watch(biometricLockEnabledProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -199,6 +203,21 @@ class ProfileScreen extends ConsumerWidget {
 
                 const SizedBox(height: 16),
 
+                // ── Tools Section ───────────────────────────────
+                _SectionHeader(title: 'Tools'),
+
+                _MenuTile(
+                  icon: Icons.bluetooth_rounded,
+                  label: 'Nearby Devices',
+                  subtitle: 'Scan for nearby Bluetooth devices',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const BluetoothScanScreen()),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 // ── Support Section ────────────────────────────
                 _SectionHeader(title: 'Support'),
 
@@ -231,6 +250,14 @@ class ProfileScreen extends ConsumerWidget {
                   value: isDark,
                   onChanged: (_) =>
                       ref.read(themeModeProvider.notifier).toggle(),
+                ),
+
+                _SwitchTile(
+                  icon: Icons.fingerprint_rounded,
+                  label: 'Biometric Lock',
+                  value: biometricLockOn,
+                  onChanged: (enable) =>
+                      _toggleBiometricLock(context, ref, enable),
                 ),
 
                 _MenuTile(
@@ -544,6 +571,46 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  // ── Toggle Biometric Lock ───────────────────────────────────
+  Future<void> _toggleBiometricLock(
+      BuildContext context, WidgetRef ref, bool enable) async {
+    if (!enable) {
+      await ref.read(biometricLockEnabledProvider.notifier).setEnabled(false);
+      if (context.mounted) {
+        AppNotify.info(context, 'Biometric lock turned off.');
+      }
+      return;
+    }
+
+    if (!BiometricService.isPlatformSupported) {
+      AppNotify.warning(
+          context, "Biometric lock isn't available on this platform.");
+      return;
+    }
+
+    final available = await BiometricService.isAvailable();
+    if (!context.mounted) return;
+    if (!available) {
+      AppNotify.warning(context,
+          'No fingerprint or Face ID is set up on this device yet.');
+      return;
+    }
+
+    final confirmed = await BiometricService.authenticate(
+      reason: 'Confirm it\'s you to enable Biometric Lock',
+    );
+    if (!context.mounted) return;
+
+    if (confirmed) {
+      await ref.read(biometricLockEnabledProvider.notifier).setEnabled(true);
+      if (context.mounted) {
+        AppNotify.success(context, "You'll need to unlock next time you open the app.");
+      }
+    } else {
+      AppNotify.error(context, 'Could not verify your identity.');
+    }
   }
 
   // ── Confirm Logout Dialog ──────────────────────────────────

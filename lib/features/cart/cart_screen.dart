@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_notify.dart';
 import '../../core/utils/error_handler.dart';
+import '../../core/services/notification_service.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/cart_item_model.dart';
@@ -275,6 +276,13 @@ class CartScreen extends ConsumerWidget {
 
       // Show success
       AppNotify.success(context, 'Order $orderId placed successfully!');
+
+      // System notification — order confirmation (Week 11)
+      NotificationService.showOrderConfirmation(
+        orderId: orderId,
+        itemCount: cartItems.length,
+        total: order.total,
+      );
 
       // Navigate to orders tab
       ref.read(mainShellTabProvider.notifier).state = 3;

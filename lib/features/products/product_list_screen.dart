@@ -8,6 +8,7 @@ import '../../routes/app_router.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_widget.dart';
 import '../main_shell.dart';
+import 'barcode_scan_screen.dart';
 
 class ProductsScreen extends ConsumerStatefulWidget {
   const ProductsScreen({super.key});
@@ -24,6 +25,18 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  // ── Scan a QR/barcode and use it as the search term (Week 11) ──
+  Future<void> _scanBarcode() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const BarcodeScanScreen()),
+    );
+    if (result == null || !mounted) return;
+
+    _searchController.text = result;
+    setState(() {});
+    ref.read(searchQueryProvider.notifier).state = result;
   }
 
   // ── Category emoji helper ──────────────────────────────────
@@ -120,34 +133,55 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
           // ── Search Field ───────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {}); // refresh clear button
-                ref.read(searchQueryProvider.notifier).state = val;
-              },
-              decoration: InputDecoration(
-                hintText: 'Search products...',
-                prefixIcon: const Icon(
-                  Icons.search_rounded,
-                  color: AppTheme.textHint,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(
-                    Icons.clear_rounded,
-                    color: AppTheme.textHint,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {}); // refresh clear button
+                      ref.read(searchQueryProvider.notifier).state = val;
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search products...',
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: AppTheme.textHint,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                        icon: const Icon(
+                          Icons.clear_rounded,
+                          color: AppTheme.textHint,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                          ref
+                              .read(searchQueryProvider.notifier)
+                              .state = '';
+                        },
+                      )
+                          : null,
+                    ),
                   ),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {});
-                    ref
-                        .read(searchQueryProvider.notifier)
-                        .state = '';
-                  },
-                )
-                    : null,
-              ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  height: 52,
+                  width: 52,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryLight,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+                  ),
+                  child: IconButton(
+                    tooltip: 'Scan to search',
+                    icon: const Icon(Icons.qr_code_scanner_rounded,
+                        color: AppTheme.primary),
+                    onPressed: _scanBarcode,
+                  ),
+                ),
+              ],
             ),
           ),
 

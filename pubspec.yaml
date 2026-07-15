@@ -43,6 +43,13 @@ dependencies:
   geolocator: ^13.0.1
   sensors_plus: ^6.0.1
 
+  # Device features — Bluetooth, QR/barcode, biometrics, local notifications (Week 11)
+  flutter_blue_plus: ^1.32.12
+  permission_handler: ^11.3.1
+  mobile_scanner: ^5.2.3
+  local_auth: ^2.3.0
+  flutter_local_notifications: ^17.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -32,6 +32,12 @@
 	<string>Mega Mart needs access to your photos to choose a profile photo.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Mega Mart uses your location to set your delivery address.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Mega Mart scans for nearby Bluetooth devices.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Mega Mart scans for nearby Bluetooth devices.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Mega Mart uses Face ID to unlock the app.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

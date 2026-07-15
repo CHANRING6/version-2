@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/notification_service.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -29,6 +30,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Local notifications — order confirmations, etc. (Week 11)
+  await NotificationService.init();
+  await NotificationService.requestPermission();
 
   runApp(
     const ProviderScope(
