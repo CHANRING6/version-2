@@ -1,0 +1,37 @@
+name: Deploy Web Trial
+
+# Builds the Flutter web app and publishes it to the gh-pages branch,
+# giving a live, shareable trial URL without needing a separate hosting
+# account. First-time setup: after this workflow runs once, go to
+# Settings > Pages on GitHub and set Source = "Deploy from a branch",
+# Branch = gh-pages, folder = / (root). After that one-time step, every
+# push to main auto-updates the live site.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web (release)
+        run: flutter build web --release --base-href /version-2/
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
